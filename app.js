@@ -1,21 +1,20 @@
 const http = require("http"),
-  fs = require("fs");
+  fs = require("fs/promises");
 
-function serveStaticFile(res, path, contentType, responseCode = 200) {
-  fs.readFile(__dirname + path, function (err, data) {
-    if (err) {
-      res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end("500 - Internal Error");
-    } else {
-      res.writeHead(responseCode, { "Content-Type": contentType });
-      res.end(data);
-    }
-  });
+async function serveStaticFile(res, path, contentType, responseCode = 200) {
+  try {
+    const data = await fs.readFile(__dirname + path);
+    res.writeHead(responseCode, { "Content-Type": contentType });
+    res.end(data);
+  } catch (error) {
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end("500 - Internal Error");
+  }
 }
-http
-  .createServer(function (req, res) {
-    const path = req.url.replace(/\/?(?:\?.*)?$/, "").toLowerCase();
 
+http
+  .createServer((req, res) => {
+    const path = req.url.replace(/\/?(?:\?.*)?$/, "").toLowerCase();
     switch (path) {
       case "":
         serveStaticFile(res, "/public/home.html", "text/html");
@@ -34,7 +33,8 @@ http
         break;
     }
   })
-  .listen(3000);
-console.log(
-  "Server started on http://localhost:3000; press Ctrl-C to terminate...."
-);
+  .listen(4000, () =>
+    console.log(
+      "Server started on http://localhost:4000; press Ctrl-C to terminate...."
+    )
+  );
